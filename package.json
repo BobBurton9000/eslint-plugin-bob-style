@@ -1,0 +1,41 @@
+{
+  "name": "eslint-plugin-bob-style",
+  "version": "1.0.0",
+  "description": "Opinionated TypeScript code style rules advocated by Bob",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build"
+  },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "typescript",
+    "opinionated",
+    "style"
+  ],
+  "author": "Bob",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=9.0.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/eslint": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^9.39.2",
+    "typescript": "^5.3.0"
+  }
+}
