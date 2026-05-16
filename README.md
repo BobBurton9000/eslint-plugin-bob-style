@@ -41,3 +41,4 @@ export default [
 ## License
 
 MIT
+# Published to npm
