@@ -1,6 +1,7 @@
 import filenameMatchesDeclaration from "./rules/filename-matches-declaration.js";
 import oneDeclarationPerFile from "./rules/one-declaration-per-file.js";
 import noExportedStandaloneCallables from "./rules/no-exported-standalone-callables.js";
+import noImportPassthroughExports from "./rules/no-import-passthrough-exports.js";
 import noElse from "./rules/no-else.js";
 import noGetPrefix from "./rules/no-get-prefix.js";
 import preferInlineExports from "./rules/prefer-inline-exports.js";
@@ -21,6 +22,7 @@ export default {
         "filename-matches-declaration": filenameMatchesDeclaration,
         "one-declaration-per-file": oneDeclarationPerFile,
         "no-exported-standalone-callables": noExportedStandaloneCallables,
+        "no-import-passthrough-exports": noImportPassthroughExports,
         "no-else": noElse,
         "no-get-prefix": noGetPrefix,
         "prefer-inline-exports": preferInlineExports,
