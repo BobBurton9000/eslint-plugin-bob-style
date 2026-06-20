@@ -78,3 +78,17 @@ test('allows named export of a var object', () => {
 
     assert.equal(result.length, 0);
 });
+
+test('reports named export of a const class instance', () => {
+    const result = lintWithRule("export const WebResourceRenderData = new WebResourceRenderDataImpl();\n");
+
+    assert.equal(result.length, 1);
+    assert.equal(result[0]?.ruleId, 'bob-style/no-exported-const-objects');
+});
+
+test('reports default export of a class instance', () => {
+    const result = lintWithRule("export default new Foo();\n");
+
+    assert.equal(result.length, 1);
+    assert.equal(result[0]?.ruleId, 'bob-style/no-exported-const-objects');
+});

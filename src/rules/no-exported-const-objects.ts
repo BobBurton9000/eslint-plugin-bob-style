@@ -4,19 +4,20 @@ const rule: Rule.RuleModule = {
     meta: {
         type: "problem",
         docs: {
-            description: "Disallow exported const objects",
+            description: "Disallow exported const objects and class instances",
         },
         schema: [],
         messages: {
-            noExportedConstObjects: "Exported const objects are not allowed. Use a class or enum instead.",
+            noExportedConstObjects: "Exported const objects and class instances are not allowed. Use a class or enum instead.",
         },
     },
     create(context) {
-        const isObjectExpression = (node: unknown) => {
+        const isObjectOrNewExpression = (node: unknown) => {
             if (!node) {
                 return false;
             }
-            return (node as Record<string, unknown>).type === "ObjectExpression";
+            const type = (node as Record<string, unknown>).type;
+            return type === "ObjectExpression" || type === "NewExpression";
         };
 
         const isConstObjectDeclaration = (node: unknown) => {
@@ -29,7 +30,7 @@ const rule: Rule.RuleModule = {
                 return false;
             }
 
-            return typedNode.declarations.some((declaration) => isObjectExpression(declaration.init));
+            return typedNode.declarations.some((declaration) => isObjectOrNewExpression(declaration.init));
         };
 
         const report = (node: unknown) => {
@@ -48,7 +49,7 @@ const rule: Rule.RuleModule = {
             },
             ExportDefaultDeclaration(node: unknown) {
                 const typedNode = node as Record<string, unknown>;
-                if (isObjectExpression(typedNode.declaration)) {
+                if (isObjectOrNewExpression(typedNode.declaration)) {
                     report(node);
                 }
             },
