@@ -13,6 +13,7 @@ import noMixedInterfaces from "./rules/no-mixed-interfaces.js";
 import noMagicStrings from "./rules/no-magic-strings.js";
 import noAnonymousObjectStructures from "./rules/no-anonymous-object-structures.js";
 import maxEffectiveLines from "./rules/max-effective-lines.js";
+import noExportedConstObjects from "./rules/no-exported-const-objects.js";
 import { staticClassRestrictions } from "./helpers/static-class-restrictions.js";
 
 export { staticClassRestrictions };
@@ -34,5 +35,6 @@ export default {
         "no-magic-strings": noMagicStrings,
         "no-anonymous-object-structures": noAnonymousObjectStructures,
         "max-effective-lines": maxEffectiveLines,
+        "no-exported-const-objects": noExportedConstObjects,
     },
 };
