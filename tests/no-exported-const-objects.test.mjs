@@ -92,3 +92,17 @@ test('reports default export of a class instance', () => {
     assert.equal(result.length, 1);
     assert.equal(result[0]?.ruleId, 'bob-style/no-exported-const-objects');
 });
+
+test('reports named export of Object.freeze with object literal', () => {
+    const result = lintWithRule("export const MyClass = Object.freeze({\n    myFunction: () => {}\n});\n");
+
+    assert.equal(result.length, 1);
+    assert.equal(result[0]?.ruleId, 'bob-style/no-exported-const-objects');
+});
+
+test('reports default export of Object.freeze with object literal', () => {
+    const result = lintWithRule("export default Object.freeze({\n    myFunction: () => {}\n});\n");
+
+    assert.equal(result.length, 1);
+    assert.equal(result[0]?.ruleId, 'bob-style/no-exported-const-objects');
+});
