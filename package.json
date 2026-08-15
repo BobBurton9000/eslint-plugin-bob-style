@@ -15,7 +15,7 @@
     "dist/"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "test": "npm run build && node --test tests/**/*.test.mjs",
     "prepack": "npm run build"
   },
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@types/eslint": "^9.0.0",
     "@types/node": "^20.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.39.2",
     "typescript": "^5.3.0"
   }
