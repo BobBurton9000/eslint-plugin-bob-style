@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-bob-style",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Opinionated TypeScript code style rules advocated by Bob",
   "type": "module",
   "repository": {
