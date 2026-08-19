@@ -134,7 +134,7 @@ jobs:
           RELEASE_VERSION: ${{ needs.prepare.outputs.release_version }}
           TARBALL_NAME: ${{ needs.prepare.outputs.tarball_name }}
         run: |
-          tarball="release/$TARBALL_NAME"
+          tarball="$PWD/release/$TARBALL_NAME"
           if registry_response=$(npm view "${EXPECTED_PACKAGE_NAME}@${RELEASE_VERSION}" dist.integrity --json --registry="$NPM_REGISTRY" 2>/dev/null); then
             published_integrity=$(printf '%s' "$registry_response" | node --input-type=module -e 'let response = ""; for await (const chunk of process.stdin) { response += chunk; } const integrity = JSON.parse(response); if (typeof integrity !== "string") process.exit(1); process.stdout.write(integrity);')
             local_integrity="sha512-$(openssl dgst -sha512 -binary "$tarball" | base64 --wrap=0)"
