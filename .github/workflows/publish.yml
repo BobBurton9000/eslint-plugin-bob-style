@@ -1,66 +1,149 @@
 name: Publish to npm
 
 on:
-  workflow_dispatch:
-    inputs:
-      version-bump:
-        description: Version increment to apply
-        required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+  push:
+    tags:
+      - "v*"
+      - "!v*-*"
 
-permissions:
-  contents: write
+env:
+  EXPECTED_PACKAGE_NAME: eslint-plugin-bob-style
+  EXPECTED_REPOSITORY_URL: git+https://github.com/BobBurton9000/eslint-plugin-bob-style.git
+  NPM_REGISTRY: https://registry.npmjs.org/
+
+permissions: {}
 
 concurrency:
-  group: publish-main
+  group: publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  publish:
+  prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      release_version: ${{ steps.identity.outputs.release_version }}
+      release_digest: ${{ steps.pack.outputs.release_digest }}
+      tarball_name: ${{ steps.pack.outputs.tarball_name }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: Checkout release commit
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify release branch
-        run: |
-          test "${GITHUB_REF}" = "refs/heads/main"
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org/
+          node-version: 24
+          registry-url: ${{ env.NPM_REGISTRY }}
+
+      - name: Verify release identity
+        id: identity
+        working-directory: source
+        run: |
+          package_name=$(npm pkg get name | tr -d '\"')
+          repository_url=$(npm pkg get repository.url | tr -d '\"')
+          release_version=$(npm pkg get version | tr -d '\"')
+          test "$GITHUB_REF_TYPE" = "tag"
+          test "$GITHUB_REF_PROTECTED" = "true"
+          test "$package_name" = "$EXPECTED_PACKAGE_NAME"
+          test "$repository_url" = "$EXPECTED_REPOSITORY_URL"
+          test "$GITHUB_REF_NAME" = "v$release_version"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies
+        working-directory: source
         run: npm ci
 
       - name: Test
+        working-directory: source
         run: npm test
 
-      - name: Configure git
+      - name: Pack release
+        id: pack
+        env:
+          RELEASE_VERSION: ${{ steps.identity.outputs.release_version }}
+        working-directory: source
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir release
+          pack_details=$(npm pack --pack-destination release --json)
+          tarball_name=$(node --input-type=module -e 'const [details] = JSON.parse(process.argv[1]); if (details?.name !== process.env.EXPECTED_PACKAGE_NAME || details?.version !== process.env.RELEASE_VERSION || typeof details?.filename !== "string") throw new Error("Packed package details do not match the release identity."); process.stdout.write(details.filename);' "$pack_details")
+          tar -xOf "release/$tarball_name" package/package.json | node --input-type=module -e 'let contents = ""; for await (const chunk of process.stdin) { contents += chunk; } const manifest = JSON.parse(contents); const repositoryUrl = manifest.repository?.url; if (manifest.name !== process.env.EXPECTED_PACKAGE_NAME || manifest.version !== process.env.RELEASE_VERSION || repositoryUrl !== process.env.EXPECTED_REPOSITORY_URL || manifest.publishConfig !== undefined) throw new Error("Packed manifest does not match the release identity.");'
+          echo "release_digest=$(sha512sum "release/$tarball_name" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          echo "tarball_name=$tarball_name" >> "$GITHUB_OUTPUT"
 
-      - name: Bump version
-        run: npm version "${{ inputs.version-bump }}" --no-git-tag-version
+      - name: Smoke test release package
+        env:
+          TARBALL_NAME: ${{ steps.pack.outputs.tarball_name }}
+        working-directory: source
+        run: |
+          smoke_directory=$(mktemp -d)
+          trap 'rm -rf "$smoke_directory"' EXIT
+          npm install --prefix "$smoke_directory" --ignore-scripts --no-package-lock --registry="$NPM_REGISTRY" "$PWD/release/$TARBALL_NAME"
+          (
+            cd "$smoke_directory"
+            node --input-type=module -e 'const { default: plugin } = await import("eslint-plugin-bob-style"); if (plugin === null || Array.isArray(plugin) || typeof plugin !== "object" || plugin.rules === null || Array.isArray(plugin.rules) || typeof plugin.rules !== "object") throw new Error("Packed plugin did not load correctly.");'
+          )
+
+      - name: Upload release package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-package
+          path: source/release/
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 24
+          registry-url: ${{ env.NPM_REGISTRY }}
+
+      - name: Download release package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-package
+          path: release
+
+      - name: Verify release package
+        env:
+          EXPECTED_DIGEST: ${{ needs.prepare.outputs.release_digest }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.release_version }}
+          TARBALL_NAME: ${{ needs.prepare.outputs.tarball_name }}
+        run: |
+          test "$GITHUB_REF_NAME" = "v$RELEASE_VERSION"
+          test -f "release/$TARBALL_NAME"
+          test "$(sha512sum "release/$TARBALL_NAME" | cut -d ' ' -f 1)" = "$EXPECTED_DIGEST"
+          tar -xOf "release/$TARBALL_NAME" package/package.json | node --input-type=module -e 'let contents = ""; for await (const chunk of process.stdin) { contents += chunk; } const manifest = JSON.parse(contents); const repositoryUrl = manifest.repository?.url; if (manifest.name !== process.env.EXPECTED_PACKAGE_NAME || manifest.version !== process.env.RELEASE_VERSION || repositoryUrl !== process.env.EXPECTED_REPOSITORY_URL || manifest.publishConfig !== undefined) throw new Error("Packed manifest does not match the release identity.");'
 
       - name: Publish to npm
-        run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Commit version bump
+          RELEASE_VERSION: ${{ needs.prepare.outputs.release_version }}
+          TARBALL_NAME: ${{ needs.prepare.outputs.tarball_name }}
         run: |
-          git add package.json package-lock.json
-          git commit -m "chore: bump version [skip ci]"
-
-      - name: Push changes
-        run: git push origin main
+          tarball="release/$TARBALL_NAME"
+          if registry_response=$(npm view "${EXPECTED_PACKAGE_NAME}@${RELEASE_VERSION}" dist.integrity --json --registry="$NPM_REGISTRY" 2>/dev/null); then
+            published_integrity=$(printf '%s' "$registry_response" | node --input-type=module -e 'let response = ""; for await (const chunk of process.stdin) { response += chunk; } const integrity = JSON.parse(response); if (typeof integrity !== "string") process.exit(1); process.stdout.write(integrity);')
+            local_integrity="sha512-$(openssl dgst -sha512 -binary "$tarball" | base64 --wrap=0)"
+            test "$published_integrity" = "$local_integrity"
+            exit 0
+          else
+            registry_status=$?
+          fi
+          registry_error_code=$(printf '%s' "$registry_response" | node --input-type=module -e 'let response = ""; for await (const chunk of process.stdin) { response += chunk; } const errorCode = JSON.parse(response).error?.code; if (typeof errorCode !== "string") process.exit(1); process.stdout.write(errorCode);')
+          if [ "$registry_error_code" = "E404" ]; then
+            npm publish "$tarball" --access public --ignore-scripts --registry="$NPM_REGISTRY"
+            exit 0
+          fi
+          printf '%s\n' "$registry_response" >&2
+          exit "$registry_status"

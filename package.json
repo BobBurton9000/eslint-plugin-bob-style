@@ -3,6 +3,10 @@
   "version": "2.0.0",
   "description": "Opinionated TypeScript code style rules advocated by Bob",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BobBurton9000/eslint-plugin-bob-style.git"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
