@@ -1,32 +1,5 @@
 import type { Rule } from "eslint";
-
-const FUNCTION_LIKE_TYPES = new Set([
-    "FunctionDeclaration",
-    "FunctionExpression",
-    "ArrowFunctionExpression",
-    "TSMethodSignature",
-    "TSFunctionType",
-    "TSCallSignatureDeclaration",
-    "TSConstructSignatureDeclaration",
-    "TSConstructorType",
-    "TSEmptyBodyFunctionExpression",
-    "TSDeclareFunction",
-]);
-
-const isFunctionLikeNode = (node: unknown): boolean => {
-    const typed = node as Record<string, unknown>;
-    return FUNCTION_LIKE_TYPES.has(typed.type as string);
-};
-
-const getParamNodes = (node: Record<string, unknown>): unknown[] | null => {
-    if ("params" in node) {
-        return node.params as unknown[];
-    }
-    if ("parameters" in node) {
-        return node.parameters as unknown[];
-    }
-    return null;
-};
+import { isFunctionLikeNode, parameterNodesFrom } from "../helpers/function-parameter-nodes.js";
 
 const isInsideParameterType = (node: unknown): boolean => {
     let current = node as Record<string, unknown> | null;
@@ -44,7 +17,7 @@ const isInsideParameterType = (node: unknown): boolean => {
                     greatGrandParent &&
                     isFunctionLikeNode(greatGrandParent)
                 ) {
-                    const params = getParamNodes(greatGrandParent);
+                    const params = parameterNodesFrom(greatGrandParent);
                     if (Array.isArray(params) && params.includes(grandParent)) {
                         return true;
                     }

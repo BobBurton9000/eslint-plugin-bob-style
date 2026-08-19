@@ -6,6 +6,7 @@ import noElse from "./rules/no-else.js";
 import noGetPrefix from "./rules/no-get-prefix.js";
 import preferInlineExports from "./rules/prefer-inline-exports.js";
 import noTsUnionType from "./rules/no-ts-union-type.js";
+import noIntersectionTypeAnnotations from "./rules/no-intersection-type-annotations.js";
 import noTsTypeAlias from "./rules/no-ts-type-alias.js";
 import noCallableInterfaces from "./rules/no-callable-interfaces.js";
 import noExtendsCallableFunction from "./rules/no-extends-callable-function.js";
@@ -30,6 +31,7 @@ export default {
         "no-get-prefix": noGetPrefix,
         "prefer-inline-exports": preferInlineExports,
         "no-ts-union-type": noTsUnionType,
+        "no-intersection-type-annotations": noIntersectionTypeAnnotations,
         "no-ts-type-alias": noTsTypeAlias,
         "no-callable-interfaces": noCallableInterfaces,
         "no-extends-callable-function": noExtendsCallableFunction,

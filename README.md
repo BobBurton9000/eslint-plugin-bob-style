@@ -36,6 +36,7 @@ query-only classes rather than data-only interfaces.
 | `no-exported-standalone-callables` | ... |
 | `no-extends-callable-function` | ... |
 | `no-get-prefix` | ... |
+| `no-intersection-type-annotations` | Disallow intersection types in property and parameter type annotations. |
 | `method-only-interfaces` | Require interfaces to contain method signatures only. |
 | `no-magic-strings` | ... |
 | `no-public-class-properties` | Disallow public, protected, and implicit class instance properties and non-private constructor parameter properties. |
