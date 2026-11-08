@@ -43,7 +43,7 @@ query-only classes rather than data-only interfaces.
 | `one-parameter-per-line` | Require one function parameter per line. |
 | `no-ts-type-alias` | ... |
 | `no-ts-union-type` | ... |
-| `one-declaration-per-file` | ... |
+| `one-declaration-per-file` | Allow at most one class declaration, class expression, or interface declaration per file. |
 | `prefer-inline-exports` | ... |
 
 ## Version 2.0.0 Breaking Change
