@@ -4,11 +4,11 @@ const rule: Rule.RuleModule = {
     meta: {
         type: "problem",
         docs: {
-            description: "Enforce one class OR interface per file",
+            description: "Enforce at most one class declaration, class expression, or interface declaration per file",
         },
         schema: [],
         messages: {
-            multipleDeclarations: "File must contain only one class OR one interface, not both or multiple of either.",
+            multipleDeclarations: "File must contain no more than one class declaration, class expression, or interface declaration.",
         },
     },
     create(context) {
@@ -17,6 +17,9 @@ const rule: Rule.RuleModule = {
 
         return {
             ClassDeclaration() {
+                classCount++;
+            },
+            ClassExpression() {
                 classCount++;
             },
             InterfaceDeclaration() {
