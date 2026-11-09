@@ -33,7 +33,7 @@ query-only classes rather than data-only interfaces.
 | `no-anonymous-object-structures` | ... |
 | `no-callable-interfaces` | ... |
 | `no-else` | ... |
-| `no-exported-standalone-callables` | ... |
+| `no-exported-standalone-callables` | Disallow exported standalone callables, including named re-exports when TypeScript can establish callability; `export *` is reported only when type information identifies callable values. |
 | `no-extends-callable-function` | ... |
 | `no-get-prefix` | ... |
 | `no-intersection-type-annotations` | Disallow intersection types in property and parameter type annotations. |
